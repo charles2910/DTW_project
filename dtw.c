@@ -6,7 +6,7 @@
 
 typedef struct particula { //estrutura contendo os dados do arquivo (teste ou treino)
     int tipo; //diz qual o tipo de movimento foi executado
-    float val[40]; //cria vetor estatico de valores do acelerom
+    float val[150]; //cria vetor estatico de valores do acelerom
 } DADO;
 
 typedef struct no { //elemento da lista q contem os dados de treino
@@ -78,49 +78,44 @@ LISTA_TREINO * criar_treino (FILE *arquivo) //cria lista de treino com dados do 
         else
             anterior->prox = novo;
         novo->item = criar_dado();  //insere o dado no nó
+
         int a = 0, pos = 0;
-        char * scanIni, *scanEsp, espaco[3];
+        char * scanI, *scanEsp, *scanEnd, espaco[3], end[3], aux[500];
+        float t = 0.0;
         espaco[0] = ' ';
         espaco[1] = ' ';
+        end[0] = '\n';
+        end[1] = '\n';
 
-/*
-        while (!feof(arquivo))
+        fgets(aux, 500, arquivo);
+        scanI = aux;
+        scanEnd = strpbrk (aux, end);
+
+        for (int b = 0; b < 151; b++)
         {
-            char aux[500];
-
-            fgets(aux, 490, arquivo);
-            str = aux;
-
-            scanIni = strpbrk (str, espaco);
-            printf("caracter encontrado: %c", ScanIni[0]);
-
-        }
-
-*/
-        /*
-        do {
-            char val[10], conv[10];
-            do {
-                a = 0;
-                val[a] = fgetc(arquivo);
-                if (a > 0)
-                    conv[a - 1] = val[a - 1];
-            }
-            while((val[a] != ' ') && (!feof(arquivo)) && (val[a] != '\n'));
-            novo->item->val[pos] = atof (conv);
-            pos++;
-            if (val[a] == '\n')
+            scanEsp = strpbrk (scanI, espaco);
+            if ((scanEsp == NULL) || (scanI == scanEnd)) //testa se chegamos ao fim da linha
                 break;
-        }
-        while(1);
+            sscanf (scanI, "%f", &t);
+            scanI = scanEsp + 1;
+            //printf("val[%d]: %f\n", b, t);
+            if (b == 0)
+            {
+                novo->item->tipo = (int) t;
+                printf("%d ",novo->item->tipo );
+            }
+            else
+            {
+                novo->item->val[b - 1] = t;
+                printf("%.6f ",novo->item->val[b - 1]);
+            }
+            t = 0.0;
 
-        fread (novo->item->tipo, sizeof(int), 1, arquivo)
-
-        fread*/
-
-
-
-        anterior = novo;
+       }
+       printf("\n");
+       /*if (novo->item->tipo > 12)
+           exit (-1);*/
+       anterior = novo;
     }
 
     return cabeca;  //retorna a cabeça da lista de treino
@@ -138,7 +133,7 @@ int main()
     char arq[30];
     DADO *teste = NULL;
     printf("Diga o nome do arquivo de treino: ");
-    gets(arq);
+    //gets(arq);
     arq_teste = fopen("treino.txt", "r");
     printf("Abriu o arq\n");
     printf("%x\n", arq_teste);
@@ -155,9 +150,24 @@ int main()
     end[0] = '\n';
     end[1] = '\n';
 
+    LISTA_TREINO *cabeca;
+    cabeca = criar_treino (arq_teste);
 
+    if (cabeca != NULL)
+    {
+        int k = 0;
+        NO *agora = NULL;
+        agora = cabeca->inicio;
+        while (agora!=NULL)
+        {
+            k++;
+            printf("Tipo: %d\n",agora->item->tipo );
+            agora = agora->prox;
+        }
+        printf("Tamanho da lista: %d\n", k);
+    }
 
-    printf ("tipo do dado: %d  Val[0]: %f", teste->tipo, teste->val[0]);
+    /*printf ("tipo do dado: %d  Val[0]: %f", teste->tipo, teste->val[0]);
     char aux[500];
 
 
@@ -165,7 +175,7 @@ int main()
     while(!feof(arq_teste))
     {
         fgets(aux, 520, arq_teste);
-        float t = 0.0;a
+        float t = 0.0;
         //printf ("string:\n%s\n\n", aux);
         scanI = aux;
         scanEnd = strpbrk (aux, end);
@@ -186,7 +196,7 @@ int main()
                 novo->item->val[b] = t;
 	    }
 
-    }
+    }*/
 
 
 
