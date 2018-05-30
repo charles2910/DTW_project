@@ -22,6 +22,46 @@ typedef struct lista { //cabeça da lista
     int tam;  //guarda o tamanho da lista
 } LISTA;
 
+typedef struct dupla {
+    int tipo;
+    float dtw;
+} DUPLA;
+
+void swap (DUPLA vetor[], int i, int j)
+{
+    DUPLA aux;
+    aux = vetor[i];
+    vetor[i] = vetor[j];
+    vetor[j] = aux;
+}
+
+void heapify(DUPLA arr[], int n, int i)
+{
+    int smaller = i;
+    int l = 2 * i + 1;
+    int r = 2 * i + 2;
+
+    if (l < n && arr[l].dtw > arr[smaller].dtw)
+        smaller = l;
+    if (r < n && arr[r].dtw > arr[smaller].dtw)
+        smaller = r;
+    if (smaller != i)
+    {
+        swap(arr, i, smaller);
+        heapify(arr, n, smaller);
+    }
+}
+
+void heapSort(DUPLA arr[], int n)
+{
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(arr, n, i);
+    for (int i = n - 1; i >= 0; i--)
+    {
+        swap(arr, 0, i);
+        heapify(arr, i, 0);
+    }
+}
 
 
 LISTA * criar_cabeca () //cria a cabeça da lista
@@ -78,7 +118,7 @@ LISTA * criar_lista (FILE *arquivo) //cria lista de treino com dados do arquivo 
     while (!feof(arquivo)) //enquanto nao chegar o fim do arquivo do usuario, continuar adicionando a lista os valores do arquivo.
     {
         int a = 0, pos = 0;
-        char * scanI, *scanEsp, espaco[3], end[3], aux[1500];
+        char * scanI, *scanEsp, espaco[3], aux[1500];
         float t = 0.0;
         espaco[0] = ' ';
         espaco[1] = ' ';
@@ -180,27 +220,97 @@ float dtw_f (float *v1, float *v2, int tam1, int tam2)
 }
 
 
+int define_tipo (DUPLA vet[], int tam)
+{
+    int knn, aux, i_maior = 0, i_2maior = 0, a;
+    int *n_prox = (int *) calloc(12, sizeof(int));
+    //ordena o vetor
+    heapSort(vet, tam);
+    for (a = 0; a < tam; a++)
+        printf("tipo e dtw: %d  %f\n", vet[a].tipo, vet[a].dtw);
+    printf("tamanho do vetor: %d\n", a);
+    //pega quantas vezez cada tipo apareceu nos k mais proximos
+    knn = 5;
+    for(a = 0; a < knn; a++)
+    {
+        aux = vet[a].tipo - 1;
+        n_prox[aux] += 1;
+        aux = 0;
+    }
+    //decide o tipo
+    for (int b = 0; b < 12; b++)
+    {
+        printf(" %d ", n_prox[b]);
 
+        if(n_prox[b] >= n_prox[i_maior])
+        {
+            int auxiliar = 0;
+            auxiliar = i_2maior;
+            i_2maior = i_maior;
+            i_maior = b;
+        }
+    }
+    return (i_maior + 1);
+}
 
+int get_dtw (LISTA *cabeca_treino, LISTA *cabeca_teste)
+{
+    int a;
+    NO *teste, *treino_atual, *aux1, *aux2;
 
+    teste = cabeca_teste->inicio;
+    treino_atual = cabeca_treino->inicio;
+
+    if ((treino_atual == NULL) || (teste == NULL))
+    {
+        printf("Erro: get_dtw lista vazia\n");
+        return (-1);
+    }
+
+    while (teste != NULL)
+    {
+        DUPLA *dtws = (DUPLA *) calloc(cabeca_treino->tam, sizeof(DUPLA));
+        treino_atual = cabeca_treino->inicio;
+        for (int t = 0; t < cabeca_treino->tam; t++)
+        {
+            printf("Chegamos em get_dtw para %d\n", t);
+            dtws[t].dtw = dtw_f (treino_atual->item->val, teste->item->val, treino_atual->item->tam, teste->item->tam);
+            dtws[t].tipo = treino_atual->item->tipo;
+            treino_atual = treino_atual->prox;
+            if (treino_atual == NULL)
+                break;
+        }
+        //define o tipo
+        teste->item->atrib = define_tipo(dtws, cabeca_treino->tam);
+        printf("Tipo atribuido: %d\n", teste->item->atrib);
+        if(teste->prox == NULL)
+            break;
+        free(dtws);
+        teste = teste->prox;
+    }
+    return 1;
+}
 
 
 
 int main()
 {
-    FILE *arq_treino = NULL;
+    FILE *arq_treino = NULL, *arq_teste = NULL;
     char arq[30];
     DADO *teste = NULL;
     //printf("Diga o nome do arquivo de treino: ");
     //gets(arq);
     arq_treino = fopen("treino.txt", "r");
+    arq_teste = fopen("teste.txt", "r");
     //printf("Abriu o arq\n");
     //printf("%x\n", arq_treino);
     int a;
 
-    LISTA *cabeca;
-    cabeca = criar_lista (arq_treino);
+    LISTA *cabeca_teste, *cabeca_treino, *cabeca;
+    cabeca_treino = criar_lista (arq_treino);
+    cabeca_teste = criar_lista (arq_teste);
 
+    cabeca = cabeca_treino;
     if (cabeca != NULL)
     {
         int k = 0;
@@ -209,11 +319,11 @@ int main()
         while (agora!=NULL)
         {
             k++;
-            printf("%d ",agora->item->tipo/*, agora->item->tam */);
+            printf("%d %d",agora->item->tipo, agora->item->tam);
             a = 0;
             while (agora->item->val[a])
             {
-                printf("%g ",agora->item->val[a]);
+                //printf("%g ",agora->item->val[a]);
                 a++;
             }
             agora = agora->prox;
@@ -222,13 +332,51 @@ int main()
         //printf("Tamanho da lista: %d\n", k);
     }
 
+    cabeca = cabeca_teste;
+    if (cabeca != NULL)
+    {
+        int k = 0;
+        NO *agora = NULL;
+        agora = cabeca->inicio;
+        while (agora!=NULL)
+        {
+            k++;
+            printf("%d %d",agora->item->tipo, agora->item->tam );
+            a = 0;
+            while (agora->item->val[a])
+            {
+                //printf("%g ",agora->item->val[a]);
+                a++;
+            }
+            agora = agora->prox;
+            printf("\n");
+        }
+        //printf("Tamanho da lista: %d\n", k);
+    }
 
-    printf("\ntamanho da lista: %d\n", cabeca->tam);
-
+    get_dtw (cabeca_treino, cabeca_teste);
+    printf("\ntamanho das listas: %d  %d\n", cabeca_treino->tam, cabeca_teste->tam);
+    cabeca = cabeca_teste;
+    if (cabeca != NULL)
+    {
+        int k = 0, acerto = 0;
+        NO *agora = NULL;
+        agora = cabeca->inicio;
+        while (agora != NULL)
+        {
+            k++;
+            if (agora->item->tipo == agora->item->atrib)
+                acerto++;
+            a = 0;
+            agora = agora->prox;
+        }
+        printf("Porcentagem de acerto: %f\n", (float)acerto/k);
+    }
 
 
 
     fclose (arq_treino);
+    fclose(arq_teste);
     //printf("%x\n", arq_treino);
 
     return 0;
