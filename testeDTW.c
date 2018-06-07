@@ -227,10 +227,10 @@ int define_tipo (DUPLA vet[], int tam)
     //ordena o vetor
     heapSort(vet, tam);
     for (a = 0; a < tam; a++)
-        printf("tipo e dtw: %d  %f\n", vet[a].tipo, vet[a].dtw);
-    printf("tamanho do vetor: %d\n", a);
+        //printf("tipo e dtw: %d  %f\n", vet[a].tipo, vet[a].dtw);
+    //printf("tamanho do vetor: %d\n", a);
     //pega quantas vezez cada tipo apareceu nos k mais proximos
-    knn = 5;
+    knn = 1;
     for(a = 0; a < knn; a++)
     {
         aux = vet[a].tipo - 1;
@@ -240,7 +240,7 @@ int define_tipo (DUPLA vet[], int tam)
     //decide o tipo
     for (int b = 0; b < 12; b++)
     {
-        printf(" %d ", n_prox[b]);
+        //printf(" %d ", n_prox[b]);
 
         if(n_prox[b] >= n_prox[i_maior])
         {
@@ -273,7 +273,7 @@ int get_dtw (LISTA *cabeca_treino, LISTA *cabeca_teste)
         treino_atual = cabeca_treino->inicio;
         for (int t = 0; t < cabeca_treino->tam; t++)
         {
-            printf("Chegamos em get_dtw para %d\n", t);
+            //printf("Chegamos em get_dtw para %d\n", t);
             dtws[t].dtw = dtw_f (treino_atual->item->val, teste->item->val, treino_atual->item->tam, teste->item->tam);
             dtws[t].tipo = treino_atual->item->tipo;
             treino_atual = treino_atual->prox;
@@ -282,7 +282,7 @@ int get_dtw (LISTA *cabeca_treino, LISTA *cabeca_teste)
         }
         //define o tipo
         teste->item->atrib = define_tipo(dtws, cabeca_treino->tam);
-        printf("Tipo atribuido: %d\n", teste->item->atrib);
+        printf("Tipo real: %d   Tipo atribuido: %d\n", teste->item->tipo, teste->item->atrib);
         if(teste->prox == NULL)
             break;
         free(dtws);
@@ -370,9 +370,34 @@ int main()
             a = 0;
             agora = agora->prox;
         }
-        printf("Porcentagem de acerto: %f\n", (float)acerto/k);
+        printf("Porcentagem de acerto: %f\n\n\n", (float)acerto/k);
     }
 
+    cabeca = cabeca_teste;
+    if (cabeca != NULL)
+    {
+        int k[13], acerto[13];
+        for (int c = 0; c <= 13; c++)
+        {
+            k[c]=0;
+            acerto[c]=0;
+        }
+        NO *agora = NULL;
+        agora = cabeca->inicio;
+        while (agora != NULL)
+        {
+            if (agora->item->tipo == agora->item->atrib)
+                acerto[agora->item->tipo] += 1;
+
+            k[agora->item->tipo] += 1;
+            a = 0;
+            agora = agora->prox;
+        }
+        for (int p = 0; p < 12; p++)
+        {
+            printf("Porcentagem de acerto em tipo %d: %f\n", p+1,(float)acerto[p + 1]/(float) k[p + 1]);
+        }
+    }
 
 
     fclose (arq_treino);
